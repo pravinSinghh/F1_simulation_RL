@@ -74,7 +74,7 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
             <div>
               <div className="flex items-center gap-1.5">
                 <h1 className="text-xs sm:text-sm font-black text-white tracking-tight">
-                  RL Aero & Dynamics
+                  F1 Simulator
                 </h1>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
                   PPO-v3
