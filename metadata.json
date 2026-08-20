@@ -1,0 +1,6 @@
+{
+  "name": "F1 Reinforcement Learning Telemetry & Aero Comparison",
+  "description": "Side-by-side synchronized comparison video and telemetry simulation of a standard baseline F1 car versus an aerodynamic and mechanical RL-optimized model across full technical Grand Prix sectors with real-time multi-cam views, aerodynamic flow physics, and live G-G polar data.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
