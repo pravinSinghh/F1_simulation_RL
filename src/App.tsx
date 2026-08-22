@@ -138,15 +138,7 @@ export default function App() {
   // Audio update sync
   useEffect(() => {
     if (!isMuted) {
-      f1Audio.updateTelemetry(
-        currentBaseTelemetry.rpm,
-        currentBaseTelemetry.throttle,
-        currentBaseTelemetry.brake,
-        currentRLTelemetry.rpm,
-        currentRLTelemetry.throttle,
-        currentRLTelemetry.brake,
-        Math.max(Math.abs(currentBaseTelemetry.lateralG), Math.abs(currentRLTelemetry.lateralG))
-      );
+      f1Audio.update(currentBaseTelemetry, currentRLTelemetry);
     }
   }, [currentBaseTelemetry, currentRLTelemetry, isMuted]);
 
