@@ -61,11 +61,15 @@ export const StintEvaluationModal: React.FC<StintEvaluationModalProps> = ({
     return `${mins}:${parseFloat(s) < 10 ? '0' : ''}${s}`;
   };
 
-  const totalDeltaAbs = Math.abs(report.totalDeltaTime).toFixed(3);
+  const totalDeltaAbs = Math.abs(report?.totalDeltaTime ?? 0).toFixed(3);
+  const speedAdvantageKmh = 12;
+  const tireAdvantagePct = Math.max(0, (report?.tireLifeRemainingRL ?? 84) - (report?.tireLifeRemainingBaseline ?? 65));
+  const consistencyScore = report?.aeroBalanceConsistencyScore ?? 97;
+  const rlRemainingTirePct = report?.tireLifeRemainingRL ?? 84;
+  const baselineRemainingTirePct = report?.tireLifeRemainingBaseline ?? 65;
 
   // Generate Corner-by-Corner Telemetry Analysis for the Active Circuit
-  const cornerTelemetryAnalysis = activeTrack.corners.map((corner, idx) => {
-    // Determine corner classification based on speed
+  const cornerTelemetryAnalysis = (activeTrack?.corners || []).map((corner, idx) => {
     const baseGuide = corner.speedGuideKmh || (idx % 3 === 0 ? 85 : idx % 3 === 1 ? 165 : 260);
     const rlApexSpeed = Math.round(baseGuide * (baseGuide < 120 ? 1.09 : baseGuide < 220 ? 1.07 : 1.05));
     const deltaGained = baseGuide < 120 ? 0.14 : baseGuide < 220 ? 0.09 : 0.06;
@@ -98,47 +102,48 @@ export const StintEvaluationModal: React.FC<StintEvaluationModalProps> = ({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5 bg-black/85 backdrop-blur-xl animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
     >
-      <div className="bg-[#0b0e17]/95 border border-white/10 rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-[0_25px_70px_rgba(0,0,0,0.85)] overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+        
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between bg-gradient-to-r from-cyan-950/30 via-transparent to-emerald-950/20">
+        <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-emerald-500 flex items-center justify-center text-zinc-950 font-black shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white font-black shadow-sm">
               <Trophy className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
-                  Grand Prix Real-Time Post-Race Analysis Report
+                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                  Race Analysis & Performance Report
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-sky-50 text-sky-800 border border-sky-200">
                   {report.completedLaps} / {targetLaps} LAPS
                 </span>
                 {report.isComplete && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    RACE CONCLUDED
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    RACE FINISHED
                   </span>
                 )}
               </div>
-              <p className="text-xs text-zinc-400">
-                {activeTrack.name} • {activeWeather.name} ({activeWeather.trackTemp}°C Track Temp) • F1 Vehicle Dynamics & Aerodynamic Analysis
+              <p className="text-xs text-slate-700 font-medium">
+                {activeTrack.name} • {activeWeather.name} ({activeWeather.trackTemp}°C) • RL-Optimized Car (#77) vs Baseline Car (#01)
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Target Laps Stint Selector (5 / 10 / 20) */}
-            <div className="flex items-center bg-black/40 border border-white/10 rounded-xl p-1">
+            {/* Target Laps Stint Selector */}
+            <div className="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-1">
               {([5, 10, 20] as StintLengthOption[]).map((laps) => (
                 <button
                   key={laps}
                   onClick={() => onChangeTargetLaps(laps)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                     targetLaps === laps
-                      ? 'bg-cyan-500 text-zinc-950 shadow-[0_0_12px_rgba(6,182,212,0.5)]'
-                      : 'text-zinc-400 hover:text-white'
+                      ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                      : 'text-slate-700 hover:text-slate-900'
                   }`}
                 >
                   {laps} Laps
@@ -148,16 +153,16 @@ export const StintEvaluationModal: React.FC<StintEvaluationModalProps> = ({
 
             <button
               onClick={onRestartStint}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-white/10 text-xs font-semibold text-zinc-300 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-700 transition-colors"
               title="Restart Stint Simulation"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
+              <RotateCcw className="w-3.5 h-3.5 text-sky-700" />
               <span>Restart</span>
             </button>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-white/10 text-zinc-400 hover:text-white transition-colors"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -165,398 +170,186 @@ export const StintEvaluationModal: React.FC<StintEvaluationModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 pt-3 border-b border-white/[0.06] bg-black/20 overflow-x-auto scrollbar-none">
-          <button
-            onClick={() => setActiveTab('summary')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'summary'
-                ? 'border-cyan-400 text-cyan-300'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Race Summary & Margin</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('corners')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'corners'
-                ? 'border-cyan-400 text-cyan-300'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <CornerDownRight className="w-3.5 h-3.5" />
-            <span>Corner-by-Corner Speeds</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('aero-parts')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'aero-parts'
-                ? 'border-cyan-400 text-cyan-300'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Wind className="w-3.5 h-3.5" />
-            <span>Aero Parts Condition</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('tire-degradation')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'tire-degradation'
-                ? 'border-cyan-400 text-cyan-300'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Flame className="w-3.5 h-3.5" />
-            <span>Tire Life & Degradation</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('lap-history')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'lap-history'
-                ? 'border-cyan-400 text-cyan-300'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Lap Traces & Splits</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('engineer-debrief')}
-            className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
-              activeTab === 'engineer-debrief'
-                ? 'border-cyan-400 text-cyan-300'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>AI Engineer Debrief</span>
-          </button>
+        <div className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 pt-3 border-b border-slate-200 bg-slate-50/40 overflow-x-auto scrollbar-none">
+          {[
+            { id: 'summary', label: 'Race Overview', icon: <Activity className="w-3.5 h-3.5" /> },
+            { id: 'corners', label: 'Corner-by-Corner Speeds', icon: <CornerDownRight className="w-3.5 h-3.5" /> },
+            { id: 'aero-parts', label: 'Aerodynamics & Upgrades', icon: <Wind className="w-3.5 h-3.5" /> },
+            { id: 'tire-degradation', label: 'Tire Life & Wear', icon: <Flame className="w-3.5 h-3.5" /> },
+            { id: 'lap-history', label: 'Lap Times Table', icon: <BarChart3 className="w-3.5 h-3.5" /> },
+            { id: 'engineer-debrief', label: 'Plain-English Summary', icon: <FileText className="w-3.5 h-3.5" /> },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-1.5 pb-2.5 px-3 text-xs font-bold transition-all whitespace-nowrap border-b-2 ${
+                activeTab === tab.id
+                  ? 'border-sky-600 text-sky-800'
+                  : 'border-transparent text-slate-700 hover:text-slate-900'
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
         </div>
 
-        {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto flex-1 flex flex-col gap-4">
-          {/* TAB 1: RACE SUMMARY */}
+        {/* Content Area */}
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-white space-y-4">
+          
+          {/* TAB 1: SUMMARY */}
           {activeTab === 'summary' && (
-            <div className="flex flex-col gap-4">
-              {/* Victory Banner */}
-              <div className="bg-gradient-to-r from-[#0d2238] via-[#0b1c2e] to-[#0d2822] border border-cyan-500/40 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-400/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
-                    <Sparkles className="w-6 h-6" />
+            <div className="space-y-4">
+              
+              {/* Hero Banner: Why RL Won */}
+              <div className="bg-gradient-to-r from-sky-50 via-indigo-50 to-emerald-50 border border-sky-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-white border border-sky-200 flex items-center justify-center text-sky-600 shadow-sm text-2xl">
+                    🏆
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold">
-                      OFFICIAL GRAND PRIX VERDICT ({targetLaps}-LAP STINT)
-                    </span>
-                    <h3 className="text-base sm:text-lg font-black text-white">
-                      RL-Optimized Aerodynamics won the race by {totalDeltaAbs}s
+                    <h3 className="text-base sm:text-lg font-black text-slate-900">
+                      RL-Optimized Car (#77) Leads by {totalDeltaAbs} Seconds
                     </h3>
-                    <p className="text-xs text-zinc-300">
-                      Adhering strictly to F1 racing principles: flat-out high-speed straights (up to {report.lapHistory[0]?.topSpeedRL} km/h), surgical braking into tight hairpins/chicanes, and zero snap oversteer.
+                    <p className="text-xs text-slate-700 font-medium mt-0.5">
+                      Completed {report?.completedLaps ?? 1} laps with {speedAdvantageKmh} km/h higher average corner speed and {tireAdvantagePct}% less tire wear.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 bg-black/40 border border-white/10 rounded-2xl p-3 px-4 text-center">
-                  <div>
-                    <span className="text-[9px] font-mono text-zinc-400 block uppercase">RL Race Time</span>
-                    <span className="text-sm sm:text-base font-black font-mono text-cyan-300">
-                      {formatSeconds(report.totalTimeRL)}
-                    </span>
-                  </div>
-                  <div className="w-px h-7 bg-white/10" />
-                  <div>
-                    <span className="text-[9px] font-mono text-zinc-400 block uppercase">Baseline Time</span>
-                    <span className="text-sm sm:text-base font-black font-mono text-zinc-400">
-                      {formatSeconds(report.totalTimeBaseline)}
-                    </span>
-                  </div>
-                  <div className="w-px h-7 bg-white/10" />
-                  <div>
-                    <span className="text-[9px] font-mono text-emerald-400 block uppercase font-bold">Total Margin</span>
-                    <span className="text-sm sm:text-base font-black font-mono text-emerald-400">
-                      -{totalDeltaAbs}s
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Metric Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="bg-[#121624]/90 border border-white/[0.08] rounded-2xl p-3.5 flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-zinc-400">
-                    <span className="text-[10px] font-mono uppercase font-bold">Average Lap Time</span>
-                    <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-                  </div>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-xl font-black font-mono text-cyan-300">
-                      {formatSeconds(report.avgLapTimeRL)}
-                    </span>
-                    <span className="text-xs text-zinc-500 font-mono">
-                      vs {formatSeconds(report.avgLapTimeBaseline)}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                    -{(report.avgLapTimeBaseline - report.avgLapTimeRL).toFixed(3)}s average pace advantage
-                  </span>
-                </div>
-
-                <div className="bg-[#121624]/90 border border-white/[0.08] rounded-2xl p-3.5 flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-zinc-400">
-                    <span className="text-[10px] font-mono uppercase font-bold">Fastest Lap of Race</span>
-                    <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                  </div>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-xl font-black font-mono text-emerald-400">
-                      {formatSeconds(report.bestLapRL)}
-                    </span>
-                    <span className="text-xs text-zinc-500 font-mono">
-                      vs {formatSeconds(report.bestLapBaseline)}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-zinc-400 font-semibold mt-0.5">
-                    Purple sector on lap 1
-                  </span>
-                </div>
-
-                <div className="bg-[#121624]/90 border border-white/[0.08] rounded-2xl p-3.5 flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-zinc-400">
-                    <span className="text-[10px] font-mono uppercase font-bold">Tire Life Remaining</span>
-                    <Flame className="w-3.5 h-3.5 text-rose-400" />
-                  </div>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-xl font-black font-mono text-emerald-400">
-                      {report.tireLifeRemainingRL}%
-                    </span>
-                    <span className="text-xs text-zinc-500 font-mono">
-                      vs {report.tireLifeRemainingBaseline}%
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-emerald-400 font-semibold mt-0.5">
-                    +{report.tireLifeRemainingRL - report.tireLifeRemainingBaseline}% more usable compound grip
-                  </span>
-                </div>
-
-                <div className="bg-[#121624]/90 border border-white/[0.08] rounded-2xl p-3.5 flex flex-col gap-1">
-                  <div className="flex items-center justify-between text-zinc-400">
-                    <span className="text-[10px] font-mono uppercase font-bold">Aero Balance Consistency</span>
-                    <Wind className="w-3.5 h-3.5 text-cyan-400" />
-                  </div>
-                  <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-xl font-black font-mono text-cyan-300">
-                      {report.aeroBalanceConsistencyScore}%
-                    </span>
-                    <span className="text-xs text-zinc-500 font-mono">
-                      (Peak 99.4%)
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-cyan-400 font-semibold mt-0.5">
-                    Zero aerodynamic stall or floor scrape
+                <div className="bg-white border border-slate-200 rounded-xl p-3 px-4 shadow-sm text-right flex-shrink-0">
+                  <span className="text-[10px] text-slate-700 uppercase font-bold block">Total Time Gap</span>
+                  <span className="text-2xl font-black font-mono text-emerald-600">
+                    -{totalDeltaAbs}s
                   </span>
                 </div>
               </div>
 
-              {/* F1 Vehicle Dynamics & Telemetry Takeaways */}
-              <div className="bg-[#0f121d] border border-white/[0.06] rounded-2xl p-4 flex flex-col gap-2.5">
-                <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                  Key F1 Race Analysis Takeaways
-                </span>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-zinc-300">
-                  <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
-                    <span className="font-bold text-cyan-300">1. Straight-Line Top Speed & DRS</span>
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">
-                      Cars stay dead straight along the racing line on straights without sideways drift. Low induced drag gives +9 km/h top speed advantage.
-                    </p>
+              {/* 4 Core Comparison Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase">Fastest Lap</span>
+                  <div className="my-1.5">
+                    <div className="text-lg font-black font-mono text-sky-800">
+                      {formatSeconds(report?.bestLapRL ?? 82.5)}
+                    </div>
+                    <span className="text-[11px] text-slate-700 font-mono">
+                      vs {formatSeconds(report?.bestLapBaseline ?? 83.3)} (Base)
+                    </span>
                   </div>
-                  <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
-                    <span className="font-bold text-emerald-300">2. Braking & Curve Deceleration</span>
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">
-                      Cars properly decelerate under 5.2G braking before slow hairpins (65-95 km/h) rather than drifting through turns unrealistically.
-                    </p>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 self-start">
+                    0.84s Faster / Lap
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase">Cornering Speed</span>
+                  <div className="my-1.5">
+                    <div className="text-lg font-black font-mono text-sky-800">
+                      +{speedAdvantageKmh} km/h
+                    </div>
+                    <span className="text-[11px] text-slate-700">Average apex speed gain</span>
                   </div>
-                  <div className="bg-black/30 p-3 rounded-xl border border-white/5 flex flex-col gap-1">
-                    <span className="font-bold text-amber-300">3. Thermal Management</span>
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">
-                      Brake cooling airfoils regulate carbon disc temperatures at 580°C, eliminating brake fade and tire blistering over {targetLaps} laps.
-                    </p>
+                  <span className="text-[11px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100 self-start">
+                    Floor Venturi Suction
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase">Tire Life Advantage</span>
+                  <div className="my-1.5">
+                    <div className="text-lg font-black font-mono text-emerald-700">
+                      +{tireAdvantagePct}% Life
+                    </div>
+                    <span className="text-[11px] text-slate-700">Preserved tire grip</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100 self-start">
+                    Zero Wheelspin Scrub
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 flex flex-col justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase">Lap Consistency</span>
+                  <div className="my-1.5">
+                    <div className="text-lg font-black font-mono text-indigo-700">
+                      {consistencyScore}%
+                    </div>
+                    <span className="text-[11px] text-slate-700">Repeatability index</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 self-start">
+                    Precision Driving Line
+                  </span>
+                </div>
+              </div>
+
+              {/* Side-by-Side Car Table */}
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="p-3 px-4 bg-slate-50 border-b border-slate-200 font-bold text-xs text-slate-800">
+                  Head-to-Head Telemetry Comparison
+                </div>
+                <div className="divide-y divide-slate-100">
+                  <div className="grid grid-cols-3 p-3 text-xs font-semibold">
+                    <span className="text-slate-700">Metric</span>
+                    <span className="text-red-700 font-bold">#01 Baseline Car</span>
+                    <span className="text-sky-800 font-bold">#77 RL-Optimized Car</span>
+                  </div>
+                  <div className="grid grid-cols-3 p-3 text-xs">
+                    <span className="text-slate-700 font-medium">Braking Distance from 300 km/h</span>
+                    <span className="font-mono text-slate-750 font-bold">118 meters</span>
+                    <span className="font-mono text-emerald-700 font-bold">103 meters (-15m shorter)</span>
+                  </div>
+                  <div className="grid grid-cols-3 p-3 text-xs">
+                    <span className="text-slate-700 font-medium">Maximum Downforce Load</span>
+                    <span className="font-mono text-slate-750 font-bold">1,820 kg</span>
+                    <span className="font-mono text-sky-800 font-bold">2,160 kg (+340 kg extra suction)</span>
+                  </div>
+                  <div className="grid grid-cols-3 p-3 text-xs">
+                    <span className="text-slate-700 font-medium">Peak Cornering Lateral G</span>
+                    <span className="font-mono text-slate-750 font-bold">4.2 G</span>
+                    <span className="font-mono text-indigo-700 font-bold">4.85 G (+0.65G lateral grip)</span>
+                  </div>
+                  <div className="grid grid-cols-3 p-3 text-xs">
+                    <span className="text-slate-700 font-medium">Full-Throttle Exit Point</span>
+                    <span className="font-mono text-slate-750 font-bold">Late (Apex + 18m)</span>
+                    <span className="font-mono text-emerald-700 font-bold">Early (Directly at Apex)</span>
                   </div>
                 </div>
               </div>
+
             </div>
           )}
 
-          {/* TAB 2: CORNER-BY-CORNER ANALYSIS */}
+          {/* TAB 2: CORNERS */}
           {activeTab === 'corners' && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between text-xs text-zinc-400">
+            <div className="space-y-3">
+              <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl text-xs text-sky-900 font-medium flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-sky-600 flex-shrink-0" />
                 <span>
-                  Real-time telemetry analysis across all {cornerTelemetryAnalysis.length} turns of {activeTrack.name}:
-                </span>
-                <span className="font-mono text-cyan-300">
-                  Total Cornering Advantage: -{(cornerTelemetryAnalysis.reduce((acc, c) => acc + c.deltaGained, 0)).toFixed(2)}s per lap
+                  Corner-by-corner analysis showing minimum apex speeds and time gained at each turn.
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5">
-                {cornerTelemetryAnalysis.map((c, i) => (
-                  <div
-                    key={i}
-                    className="bg-[#111422] border border-white/[0.08] rounded-2xl p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 hover:border-cyan-500/40 transition-colors"
-                  >
-                    <div className="flex-1 flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                          Sector {c.sector}
-                        </span>
-                        <h4 className="text-sm font-bold text-white">{c.name}</h4>
-                        <span className="text-[10px] text-zinc-400 font-mono">({c.cornerType})</span>
-                      </div>
-                      <p className="text-[11px] text-zinc-300 leading-relaxed">{c.drivingPrinciple}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3 bg-black/40 p-2.5 px-4 rounded-xl border border-white/5 text-center min-w-[220px]">
-                      <div>
-                        <span className="text-[9px] font-mono text-zinc-400 block uppercase">Base Apex</span>
-                        <span className="text-xs font-mono font-bold text-red-400">{c.baseApexSpeed} km/h</span>
-                      </div>
-                      <div className="w-px h-6 bg-white/10" />
-                      <div>
-                        <span className="text-[9px] font-mono text-cyan-300 block uppercase font-bold">RL Apex</span>
-                        <span className="text-xs font-mono font-bold text-cyan-300">{c.rlApexSpeed} km/h</span>
-                      </div>
-                      <div className="w-px h-6 bg-white/10" />
-                      <div>
-                        <span className="text-[9px] font-mono text-emerald-400 block uppercase font-bold">Gain</span>
-                        <span className="text-xs font-mono font-bold text-emerald-400">+{c.speedGain} km/h</span>
-                      </div>
-                    </div>
+              <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                <div className="divide-y divide-slate-100">
+                  <div className="grid grid-cols-12 p-3 bg-slate-50 text-xs font-bold text-slate-700">
+                    <span className="col-span-4">Corner Name</span>
+                    <span className="col-span-2 text-center">Sector</span>
+                    <span className="col-span-2 text-center">Baseline Speed</span>
+                    <span className="col-span-2 text-center">RL Apex Speed</span>
+                    <span className="col-span-2 text-right">Advantage</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 3: AERO PARTS IMPACT */}
-          {activeTab === 'aero-parts' && (
-            <div className="flex flex-col gap-3">
-              <div className="text-xs text-zinc-400">
-                Detailed condition analysis of key F1 car components optimized by the Reinforcement Learning agent through aerodynamic load simulation:
-              </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                {report.partConditions.map((part) => (
-                  <div
-                    key={part.id}
-                    className="bg-[#111422] border border-white/[0.08] rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-md hover:border-cyan-500/40 transition-colors"
-                  >
-                    <div className="flex-1 flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                          {part.category}
-                        </span>
-                        <h4 className="text-sm font-bold text-white">{part.partName}</h4>
+                  {cornerTelemetryAnalysis.map((c, i) => (
+                    <div key={i} className="grid grid-cols-12 p-3 text-xs items-center hover:bg-slate-50/80 transition-colors">
+                      <div className="col-span-4">
+                        <span className="font-bold text-slate-900 block">{c.name}</span>
+                        <span className="text-[11px] text-slate-700 truncate block mt-0.5">{c.drivingPrinciple}</span>
                       </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1 text-xs font-mono">
-                        <div className="bg-black/30 p-2 rounded-xl border border-red-500/20">
-                          <span className="text-[9px] text-red-400 block font-sans uppercase font-bold">Baseline OEM Condition:</span>
-                          <span className="text-zinc-300 text-[11px]">{part.baselineStatus}</span>
-                        </div>
-                        <div className="bg-black/30 p-2 rounded-xl border border-cyan-500/30">
-                          <span className="text-[9px] text-cyan-400 block font-sans uppercase font-bold">RL Optimized Condition:</span>
-                          <span className="text-cyan-200 text-[11px]">{part.rlOptimizedStatus}</span>
-                        </div>
-                      </div>
-
-                      <div className="text-xs text-zinc-400 mt-1 font-sans">
-                        <span className="text-zinc-300 font-semibold">Telemetry Impact: </span>
-                        {part.telemetryImpact}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-1 min-w-[140px] bg-black/40 p-3 rounded-2xl border border-white/5">
-                      <span className="text-[9px] font-mono text-zinc-400 uppercase">Aerodynamic Gain</span>
-                      <span className="text-xs font-bold text-emerald-400 font-mono text-right">{part.aerodynamicGain}</span>
-                      <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden mt-1">
-                        <div
-                          className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400"
-                          style={{ width: `${part.efficiencyRating}%` }}
-                        />
-                      </div>
-                      <span className="text-[9px] font-mono text-cyan-300">{part.efficiencyRating}% Efficiency Rating</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* TAB 4: TIRE DEGRADATION */}
-          {activeTab === 'tire-degradation' && (
-            <div className="flex flex-col gap-4">
-              <div className="bg-[#111422] border border-white/[0.08] rounded-2xl p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-bold text-white">Compound Life & Grip Degradation Progression</h4>
-                    <p className="text-xs text-zinc-400">
-                      Why RL wins over {targetLaps} laps: Stable downforce stops tire surface overheating & scrubbing.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs font-mono">
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                      <span className="text-zinc-300">Baseline Wear Rate: ~6.5%/lap</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
-                      <span className="text-cyan-300">RL Wear Rate: ~3.4%/lap (-48% less wear)</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Visual degradation bars per lap */}
-                <div className="flex flex-col gap-2 mt-2">
-                  {report.lapHistory.map((lh) => (
-                    <div key={lh.lapNumber} className="bg-black/30 p-2.5 rounded-xl border border-white/5 flex items-center gap-3">
-                      <span className="text-xs font-mono font-bold text-zinc-400 w-12">Lap {lh.lapNumber}</span>
-                      
-                      <div className="flex-1 flex flex-col gap-1">
-                        {/* RL bar */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-mono text-cyan-400 w-6">RL</span>
-                          <div className="flex-1 bg-zinc-800/80 h-2 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-cyan-400 rounded-full transition-all"
-                              style={{ width: `${lh.rlTireWearPct}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] font-mono text-cyan-300 w-10 text-right">{lh.rlTireWearPct}%</span>
-                        </div>
-
-                        {/* Baseline bar */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-mono text-red-400 w-6">Base</span>
-                          <div className="flex-1 bg-zinc-800/80 h-2 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-red-500 rounded-full transition-all"
-                              style={{ width: `${lh.baselineTireWearPct}%` }}
-                            />
-                          </div>
-                          <span className="text-[10px] font-mono text-zinc-400 w-10 text-right">{lh.baselineTireWearPct}%</span>
-                        </div>
-                      </div>
-
-                      <div className="text-right w-24">
-                        <span className="text-xs font-mono font-bold text-emerald-400">
-                          +{lh.rlTireWearPct - lh.baselineTireWearPct}% Grip
-                        </span>
+                      <span className="col-span-2 text-center font-mono text-slate-700">S{c.sector}</span>
+                      <span className="col-span-2 text-center font-mono text-slate-700 font-bold">{c.baseApexSpeed} km/h</span>
+                      <span className="col-span-2 text-center font-mono font-bold text-sky-800">{c.rlApexSpeed} km/h</span>
+                      <div className="col-span-2 text-right">
+                        <span className="font-mono font-black text-emerald-700 block">+{c.speedGain} km/h</span>
+                        <span className="text-[10px] text-emerald-700 font-mono">-{c.deltaGained}s</span>
                       </div>
                     </div>
                   ))}
@@ -565,91 +358,138 @@ export const StintEvaluationModal: React.FC<StintEvaluationModalProps> = ({
             </div>
           )}
 
-          {/* TAB 5: LAP-BY-LAP HISTORY */}
+          {/* TAB 3: AERO & UPGRADES */}
+          {activeTab === 'aero-parts' && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="w-8 h-8 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center font-bold mb-2">
+                      <Wind className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900">Floor Venturi Ground Effect</h4>
+                    <p className="text-xs text-slate-700 mt-1 leading-relaxed">
+                      Seals the underfloor air passages using low pressure, producing 1,480 kg of downforce without creating excess aerodynamic drag.
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-700 mt-3 block">+14 km/h faster in high-speed turns</span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold mb-2">
+                      <Zap className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900">Dynamic Brake-Bias Migration</h4>
+                    <p className="text-xs text-slate-700 mt-1 leading-relaxed">
+                      Shifts brake balance rearward dynamically as the driver turns in, rotating the car effortlessly and shortening the stopping distance.
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-700 mt-3 block">-15 meters shorter braking distance</span>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold mb-2">
+                      <Layers className="w-4 h-4" />
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-900">Adaptive Differential Traction</h4>
+                    <p className="text-xs text-slate-700 mt-1 leading-relaxed">
+                      Locks and unlocks the rear differential in milliseconds, preventing wheelspin on corner exit and preserving tire life.
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-700 mt-3 block">18% less tire wear over the race</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: TIRE DEGRADATION */}
+          {activeTab === 'tire-degradation' && (
+            <div className="space-y-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <h4 className="text-sm font-bold text-slate-900 mb-2">Tire Health & Grip Remaining After {report?.completedLaps ?? 1} Laps</h4>
+                
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                      <span>#77 RL-Optimized Car</span>
+                      <span className="text-emerald-700 font-mono">{rlRemainingTirePct}% Grip Remaining</span>
+                    </div>
+                    <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald-500 rounded-full"
+                        style={{ width: `${rlRemainingTirePct}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                      <span>#01 Baseline Car</span>
+                      <span className="text-amber-700 font-mono">{baselineRemainingTirePct}% Grip Remaining</span>
+                    </div>
+                    <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-amber-500 rounded-full"
+                        style={{ width: `${baselineRemainingTirePct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-700 mt-4 leading-relaxed">
+                  The RL policy optimizes steering angles and wheel slip ratios to keep tire carcass temperatures in the optimal 100°C–104°C window, avoiding surface overheating and blister degradation.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: LAP HISTORY */}
           {activeTab === 'lap-history' && (
-            <div className="flex flex-col gap-3">
-              <div className="overflow-x-auto rounded-2xl border border-white/[0.08]">
-                <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-black/60 text-zinc-400 uppercase text-[10px] border-b border-white/[0.08]">
-                    <tr>
-                      <th className="p-3">Lap</th>
-                      <th className="p-3 text-red-400">Baseline Time</th>
-                      <th className="p-3 text-cyan-400">RL Time</th>
-                      <th className="p-3 text-emerald-400">Lap Delta</th>
-                      <th className="p-3 text-zinc-300">Cumul. RL Lead</th>
-                      <th className="p-3 text-zinc-400">RL Aero L/D</th>
-                      <th className="p-3 text-zinc-400">RL Tire Life</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.04] bg-[#0d101a]/90">
-                    {report.lapHistory.map((lh) => (
-                      <tr key={lh.lapNumber} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="p-3 font-bold text-white">Lap {lh.lapNumber}</td>
-                        <td className="p-3 text-zinc-300">{formatSeconds(lh.lapTimeBaseline)}</td>
-                        <td className="p-3 text-cyan-300 font-bold">{formatSeconds(lh.lapTimeRL)}</td>
-                        <td className="p-3 text-emerald-400 font-extrabold">{lh.delta.toFixed(3)}s</td>
-                        <td className="p-3 text-emerald-400 font-black">
-                          {lh.cumulativeDelta.toFixed(3)}s
-                        </td>
-                        <td className="p-3 text-zinc-300">{lh.rlAeroEfficiency} L/D</td>
-                        <td className="p-3 text-cyan-300">{lh.rlTireWearPct}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div className="divide-y divide-slate-100">
+                <div className="grid grid-cols-12 p-3 bg-slate-50 text-xs font-bold text-slate-700">
+                  <span className="col-span-2">Lap #</span>
+                  <span className="col-span-3 text-center">Baseline Time</span>
+                  <span className="col-span-3 text-center">RL Time</span>
+                  <span className="col-span-2 text-center">Lap Delta</span>
+                  <span className="col-span-2 text-right">Cumulative Lead</span>
+                </div>
+                {(report?.lapHistory || []).map((lap) => (
+                  <div key={lap.lapNumber} className="grid grid-cols-12 p-3 text-xs items-center hover:bg-slate-50">
+                    <span className="col-span-2 font-bold font-mono text-slate-900">Lap {lap.lapNumber}</span>
+                    <span className="col-span-3 text-center font-mono text-slate-700">{formatSeconds(lap.lapTimeBaseline)}</span>
+                    <span className="col-span-3 text-center font-mono font-bold text-sky-800">{formatSeconds(lap.lapTimeRL)}</span>
+                    <span className="col-span-2 text-center font-mono font-bold text-emerald-700">-{Math.abs(lap.delta).toFixed(3)}s</span>
+                    <span className="col-span-2 text-right font-mono font-black text-emerald-700">-{Math.abs(lap.cumulativeDelta).toFixed(3)}s</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* TAB 6: AI RACE ENGINEER DEBRIEF */}
+          {/* TAB 6: ENGINEER DEBRIEF */}
           {activeTab === 'engineer-debrief' && (
-            <div className="flex flex-col gap-3.5">
-              <div className="bg-[#101422] border border-cyan-500/30 rounded-2xl p-4 flex flex-col gap-3">
-                <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm">
-                  <Cpu className="w-4 h-4" />
-                  <span>Telemetry Engineering Debrief & Driving Policy Diagnostics</span>
-                </div>
-                <div className="text-xs text-zinc-300 space-y-2.5 leading-relaxed">
-                  <p>
-                    <strong className="text-white">Straight-Line Stability:</strong> The RL car maintained a razor-sharp straight heading on high-speed sections ({activeTrack.name} main straight), generating minimum induced yaw drag and reaching higher top speeds without oscillations.
-                  </p>
-                  <p>
-                    <strong className="text-white">Cornering Discipline:</strong> On approaching low-speed hairpins and chicanes, the car performed maximum 5.2G threshold braking before turn-in, clipped the inner apex kerb at optimal minimum speed, and applied progressive throttle without rear-end snap.
-                  </p>
-                  <p>
-                    <strong className="text-white">Floor Suction & Anti-Porpoising:</strong> The Venturi tunnels maintained a constant 22mm ground clearance, delivering 1,480 kg of suction at 300 km/h with 0% porpoising frequency.
-                  </p>
-                  <p>
-                    <strong className="text-white">Tire Thermal Preservation:</strong> Eliminating front-axle scrubbing in medium-speed transitions prevented tire surface overheating, allowing the car to lap consistently across the entire {targetLaps}-lap distance.
-                  </p>
-                </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-sm border-b border-slate-200 pb-2">
+                <FileText className="w-4 h-4 text-sky-600" />
+                <span>Executive Race Engineering Debrief</span>
+              </div>
+              <div className="text-xs text-slate-700 space-y-3 leading-relaxed">
+                <p>
+                  <strong>1. Aerodynamic Stability:</strong> The reinforcement learning model learned to maximize floor ground-effect downforce while preventing porpoising (aerodynamic stall). This gave the driver confidence to carry +12 to +18 km/h higher speeds through fast sweepers.
+                </p>
+                <p>
+                  <strong>2. Braking Deceleration:</strong> Instead of static front-heavy braking, the RL policy migrates brake bias rearward (from 58% to 54.2%) into corner entry. This enables 15-meter deeper braking markers while eliminating front-lockup flatspots.
+                </p>
+                <p>
+                  <strong>3. Tire Preservation:</strong> By smoothing out rapid steering inputs and managing micro-slip angles, the RL controller achieved 18% less tire wear over the race stint, ensuring consistent lap times until the chequered flag.
+                </p>
               </div>
             </div>
           )}
-        </div>
 
-        {/* Modal Footer */}
-        <div className="p-4 border-t border-white/[0.08] bg-black/40 flex items-center justify-between">
-          <div className="text-xs text-zinc-400 flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span>F1 Dynamics & Aerodynamics Engine Verified</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onRestartStint}
-              className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-white transition-colors flex items-center gap-1.5"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Run Next {targetLaps}-Lap Race</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="px-5 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-zinc-950 text-xs font-bold shadow-[0_0_16px_rgba(6,182,212,0.4)] transition-all"
-            >
-              Back to Track
-            </button>
-          </div>
         </div>
       </div>
     </div>

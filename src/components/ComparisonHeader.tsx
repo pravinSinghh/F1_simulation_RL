@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { TelemetryPoint, LapSummary, TrackId, WeatherConditionId, StintLengthOption } from '../types';
 import { TRACKS_DATA, WEATHER_CONDITIONS } from '../physics/f1Track';
-import { Cpu, Activity, MapPin, CloudRain, ChevronDown, Trophy } from 'lucide-react';
+import { Cpu, Activity, MapPin, CloudSun, ChevronDown, Trophy, Sparkles } from 'lucide-react';
 
 interface ComparisonHeaderProps {
   currentTrackId: TrackId;
@@ -52,7 +52,7 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
   }, []);
 
   const currentDeltaTime = rlTelemetry.time - baseTelemetry.time;
-  const speedDelta = Math.round(rlTelemetry.speed - baseTelemetry.speed);
+  const isRLLeading = currentDeltaTime <= 0;
 
   // Mini-sector blocks (24 micro-sectors)
   const numMiniSectors = 24;
@@ -62,28 +62,33 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
   const activeWeather = WEATHER_CONDITIONS[currentWeatherId] || WEATHER_CONDITIONS.dry;
 
   return (
-    <header className="px-2 sm:px-3 pt-2 pb-0.5 select-none z-30">
-      {/* Bento Grid Top Container */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-        {/* Bento Cell 1: App Identity & Track / Weather Selectors (Cols 1-4) */}
-        <div className="md:col-span-4 bg-[#11131c]/90 border border-white/[0.08] backdrop-blur-xl rounded-2xl p-2 px-3 flex items-center justify-between gap-2 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-zinc-950 font-black text-xs shadow-[0_0_15px_rgba(6,182,212,0.45)]">
+    <header className="px-2 sm:px-4 pt-2 pb-1 select-none z-30">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-2.5 items-center">
+        
+        {/* Cell 1: Brand & Circuit / Weather Selectors (Cols 1-5) */}
+        <div className="md:col-span-5 bg-white/95 border border-slate-200/90 backdrop-blur-md rounded-2xl p-2.5 px-3.5 flex items-center justify-between gap-2 shadow-sm">
+          {/* Logo & Title */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center text-white font-black text-xs shadow-sm tracking-tighter">
               F1
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-xs sm:text-sm font-black text-white tracking-tight">
+                <h1 className="text-sm font-black text-slate-900 tracking-tight">
                   F1 Simulator
                 </h1>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
-                  PPO-v3
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 flex items-center gap-0.5">
+                  <Sparkles className="w-2.5 h-2.5 text-sky-600" />
+                  RL vs Base
                 </span>
               </div>
+              <p className="text-[11px] text-slate-700 font-medium truncate max-w-[160px] sm:max-w-none">
+                {activeTrack.name}
+              </p>
             </div>
           </div>
 
-          {/* Track & Weather Selector Dropdowns */}
+          {/* Circuit & Weather Dropdown Trigger Controls */}
           <div ref={dropdownRef} className="flex items-center gap-1.5 relative">
             {/* Track Switcher */}
             <div className="relative">
@@ -93,18 +98,18 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
                   setIsTrackDropdownOpen(!isTrackDropdownOpen);
                   setIsWeatherDropdownOpen(false);
                 }}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 text-[11px] font-medium text-zinc-200 transition-all hover:border-cyan-500/40"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs font-bold text-slate-800 transition-all hover:border-slate-300"
                 title="Select Grand Prix Circuit"
               >
-                <MapPin className="w-3 h-3 text-cyan-400" />
-                <span className="max-w-[75px] truncate font-bold">{activeTrack.name.split(' ')[0]}</span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
+                <MapPin className="w-3.5 h-3.5 text-red-600" />
+                <span className="max-w-[70px] sm:max-w-[90px] truncate">{activeTrack.name.split(' ')[0]}</span>
+                <ChevronDown className="w-3 h-3 text-slate-700" />
               </button>
 
               {isTrackDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1.5 w-60 bg-[#0d1017] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 backdrop-blur-2xl">
-                  <div className="px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-zinc-400 border-b border-white/5 font-bold">
-                    Select Grand Prix Circuit
+                <div className="absolute top-full left-0 mt-1.5 w-64 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-xl z-50 flex flex-col gap-1 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-2.5 py-1 text-[10px] uppercase tracking-wider text-slate-700 border-b border-slate-100 font-extrabold">
+                    Select Circuit
                   </div>
                   {(Object.keys(TRACKS_DATA) as TrackId[]).map((tId) => {
                     const t = TRACKS_DATA[tId];
@@ -116,17 +121,19 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
                           onChangeTrack(tId);
                           setIsTrackDropdownOpen(false);
                         }}
-                        className={`flex flex-col text-left px-2.5 py-1.5 rounded-xl transition-all ${
+                        className={`flex flex-col text-left px-3 py-2 rounded-xl transition-all ${
                           isSelected
-                            ? 'bg-cyan-500/15 border border-cyan-500/40 text-cyan-300'
-                            : 'hover:bg-zinc-800/80 text-zinc-300 border border-transparent'
+                            ? 'bg-sky-50 border border-sky-200 text-sky-900 font-bold'
+                            : 'hover:bg-slate-50 text-slate-700 border border-transparent'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white">{t.name}</span>
-                          <span className="text-[9px] font-mono text-zinc-400">{(t.lengthMeters / 1000).toFixed(2)} km</span>
+                          <span className="text-xs font-bold text-slate-900">{t.name}</span>
+                          <span className="text-[10px] text-slate-700 font-mono font-medium">
+                            {(t.lengthMeters / 1000).toFixed(2)} km
+                          </span>
                         </div>
-                        <span className="text-[10px] text-zinc-400 truncate">{t.evaluationFocus}</span>
+                        <span className="text-[11px] text-slate-700 truncate mt-0.5">{t.evaluationFocus}</span>
                       </button>
                     );
                   })}
@@ -142,18 +149,18 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
                   setIsWeatherDropdownOpen(!isWeatherDropdownOpen);
                   setIsTrackDropdownOpen(false);
                 }}
-                className="flex items-center gap-1 px-2 py-1 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 text-[11px] font-medium text-amber-300 transition-all hover:border-amber-500/40"
-                title="Select Seasonal / Weather Condition"
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-xs font-bold text-amber-900 transition-all hover:border-amber-300"
+                title="Select Weather Condition"
               >
-                <CloudRain className="w-3 h-3 text-amber-400" />
+                <CloudSun className="w-3.5 h-3.5 text-amber-600" />
                 <span className="max-w-[65px] truncate">{activeWeather.name.split(' ')[0]}</span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
+                <ChevronDown className="w-3 h-3 text-amber-700" />
               </button>
 
               {isWeatherDropdownOpen && (
-                <div className="absolute top-full right-0 mt-1.5 w-64 bg-[#0d1017] border border-white/15 rounded-2xl p-1.5 shadow-2xl z-50 flex flex-col gap-1 backdrop-blur-2xl">
-                  <div className="px-2 py-1 text-[9px] font-mono uppercase tracking-widest text-zinc-400 border-b border-white/5 font-bold">
-                    Seasonal Environmental Conditions
+                <div className="absolute top-full right-0 mt-1.5 w-64 bg-white border border-slate-200 rounded-2xl p-1.5 shadow-xl z-50 flex flex-col gap-1 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-100">
+                  <div className="px-2.5 py-1 text-[10px] uppercase tracking-wider text-slate-700 border-b border-slate-100 font-extrabold">
+                    Weather & Track Conditions
                   </div>
                   {(Object.keys(WEATHER_CONDITIONS) as WeatherConditionId[]).map((wId) => {
                     const w = WEATHER_CONDITIONS[wId];
@@ -165,17 +172,17 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
                           onChangeWeather(wId);
                           setIsWeatherDropdownOpen(false);
                         }}
-                        className={`flex flex-col text-left px-2.5 py-1.5 rounded-xl transition-all ${
+                        className={`flex flex-col text-left px-3 py-2 rounded-xl transition-all ${
                           isSelected
-                            ? 'bg-amber-500/15 border border-amber-500/40 text-amber-300'
-                            : 'hover:bg-zinc-800/80 text-zinc-300 border border-transparent'
+                            ? 'bg-amber-50 border border-amber-200 text-amber-900 font-bold'
+                            : 'hover:bg-slate-50 text-slate-700 border border-transparent'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-white">{w.name}</span>
-                          <span className="text-[9px] font-mono font-bold text-amber-400">{w.trackTemp}°C</span>
+                          <span className="text-xs font-bold text-slate-900">{w.name}</span>
+                          <span className="text-[10px] font-mono font-bold text-amber-700">{w.trackTemp}°C</span>
                         </div>
-                        <span className="text-[10px] text-zinc-400 truncate">{w.description}</span>
+                        <span className="text-[11px] text-slate-700 truncate mt-0.5">{w.description}</span>
                       </button>
                     );
                   })}
@@ -185,92 +192,95 @@ export const ComparisonHeader: React.FC<ComparisonHeaderProps> = ({
           </div>
         </div>
 
-        {/* Bento Cell 2: Stint Round Selector & Live Gap Dominance (Cols 5-8) */}
-        <div className="md:col-span-4 bg-[#11131c]/90 border border-white/[0.08] backdrop-blur-xl rounded-2xl p-1.5 px-3 flex flex-col items-center justify-center gap-1 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-          <div className="flex items-center justify-between w-full font-mono text-[11px]">
+        {/* Cell 2: Lap Progress & Track Dominance (Cols 6-8) */}
+        <div className="md:col-span-3 bg-white/95 border border-slate-200/90 backdrop-blur-md rounded-2xl p-2 px-3.5 flex flex-col justify-center gap-1.5 shadow-sm">
+          <div className="flex items-center justify-between text-xs">
             {/* Laps Stint Selector */}
-            <div className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5">
+            <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
               {([5, 10, 20] as StintLengthOption[]).map((l) => (
                 <button
                   key={l}
                   onClick={() => onChangeTargetLaps(l)}
-                  className={`px-1.5 py-0.2 text-[9px] font-bold rounded transition-colors ${
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-md transition-colors ${
                     targetLaps === l
-                      ? 'bg-cyan-500 text-zinc-950 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
-                      : 'text-zinc-400 hover:text-white'
+                      ? 'bg-white text-slate-900 shadow-sm border border-slate-200'
+                      : 'text-slate-700 hover:text-slate-900'
                   }`}
+                  title={`Run ${l}-Lap Stint Simulation`}
                 >
                   {l}L
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-zinc-400 font-semibold tracking-wider text-[10px]">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-bold text-slate-700">
                 LAP {currentLap}/{targetLaps}
               </span>
-              <span className="text-emerald-400 font-extrabold text-xs tracking-tight drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
-                {currentDeltaTime <= 0 ? `${currentDeltaTime.toFixed(3)}s` : `+${currentDeltaTime.toFixed(3)}s`}
+              <span className="text-xs font-black font-mono px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                {isRLLeading ? `-${Math.abs(currentDeltaTime).toFixed(3)}s` : `+${currentDeltaTime.toFixed(3)}s`}
               </span>
             </div>
           </div>
 
           {/* Micro-Sectors Indicator Strip */}
-          <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded-full border border-white/5 w-full justify-center">
+          <div className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 w-full justify-between">
             {Array.from({ length: numMiniSectors }).map((_, i) => {
               const isPassed = i <= currentMiniSector;
               const isCurrent = i === currentMiniSector;
               const isRLDominant = i !== 0 && i !== 12;
-              
-              let bgColor = 'bg-zinc-800/80';
+
+              let bgColor = 'bg-slate-300';
               if (isCurrent) {
-                bgColor = 'bg-white shadow-[0_0_8px_#ffffff] scale-110';
+                bgColor = 'bg-slate-900 ring-2 ring-sky-400 scale-110';
               } else if (isPassed) {
-                bgColor = isRLDominant ? 'bg-cyan-400 shadow-[0_0_4px_rgba(34,211,238,0.8)]' : 'bg-amber-400';
+                bgColor = isRLDominant ? 'bg-sky-500' : 'bg-amber-400';
               }
 
               return (
                 <div
                   key={i}
-                  className={`w-2 sm:w-2.5 h-1.5 rounded-[2px] transition-all duration-75 ${bgColor}`}
-                  title={`Mini Sector ${i + 1}`}
+                  className={`h-1.5 flex-1 rounded-[2px] transition-all duration-75 ${bgColor}`}
+                  title={`Micro-Sector ${i + 1}`}
                 />
               );
             })}
           </div>
         </div>
 
-        {/* Bento Cell 3: Technical Modal Triggers & Grand Prix Evaluation (Cols 9-12) */}
-        <div className="md:col-span-4 bg-[#11131c]/90 border border-white/[0.08] backdrop-blur-xl rounded-2xl p-1.5 px-2 flex items-center justify-end gap-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+        {/* Cell 3: Clear Analysis & Comparison Reports (Cols 9-12) */}
+        <div className="md:col-span-4 bg-white/95 border border-slate-200/90 backdrop-blur-md rounded-2xl p-1.5 px-2.5 flex items-center justify-end gap-1.5 shadow-sm">
           {/* Stint Evaluation Button */}
           <button
             id="btn-open-evaluation"
             onClick={onOpenStintEvaluation}
-            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/20 to-emerald-500/20 hover:from-cyan-500/30 hover:to-emerald-500/30 border border-cyan-500/40 text-[11px] font-bold text-cyan-300 transition-all shadow-[0_0_12px_rgba(6,182,212,0.2)]"
-            title="Open Stint Evaluation & RL Aero Benchmark Report"
+            className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-xs font-bold text-white shadow-sm transition-all"
+            title="Open Stint Evaluation & Race Report"
           >
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
-            <span>Evaluation ({targetLaps}L)</span>
+            <Trophy className="w-3.5 h-3.5 text-amber-300" />
+            <span>Race Report</span>
           </button>
 
-          <button
-            id="btn-open-inspector"
-            onClick={onOpenInspector}
-            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-white/10 text-[11px] font-semibold text-zinc-200 transition-all hover:border-cyan-500/50"
-            title="Inspect RL Component Optimizations"
-          >
-            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Aero Parts</span>
-          </button>
-
+          {/* Traces / Telemetry Graphs Button */}
           <button
             id="btn-open-telemetry-graph"
             onClick={onOpenTelemetryGraph}
-            className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-[11px] font-semibold text-cyan-300 transition-all"
-            title="View Real-Time Lap Traces & Delta Chart"
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs font-bold text-slate-800 transition-all hover:border-slate-300"
+            title="View Real-Time Graphs & Speed Comparison"
           >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Traces</span>
+            <Activity className="w-3.5 h-3.5 text-sky-600" />
+            <span>Speed Traces</span>
+          </button>
+
+          {/* Aero Parts Inspector */}
+          <button
+            id="btn-open-inspector"
+            onClick={onOpenInspector}
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs font-bold text-slate-800 transition-all hover:border-slate-300"
+            title="Inspect RL Optimizations & Aero Components"
+          >
+            <Cpu className="w-3.5 h-3.5 text-indigo-600" />
+            <span>RL Upgrades</span>
           </button>
         </div>
       </div>

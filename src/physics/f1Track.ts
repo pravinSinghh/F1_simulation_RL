@@ -504,7 +504,7 @@ export const WEATHER_CONDITIONS: Record<WeatherConditionId, WeatherCondition> = 
     airDensity: 1.225,
     rainIntensity: 0.0,
     tireCompound: 'Pirelli Soft (C5 Red)',
-    skyColor: 0x07090e,
+    skyColor: 0xbed6f2,
     description: 'Perfect race conditions. Maximum tire friction coefficient, peak aerodynamic downforce suction, and crisp rubber line groove.',
   },
   wet: {
@@ -517,7 +517,7 @@ export const WEATHER_CONDITIONS: Record<WeatherConditionId, WeatherCondition> = 
     airDensity: 1.250,
     rainIntensity: 0.95,
     tireCompound: 'Pirelli Cinturato Wet (Blue Grooved)',
-    skyColor: 0x0c111c,
+    skyColor: 0x94a3b8,
     description: 'Standing water & low adhesion surface. Tests RL intelligent throttle ramp-up, hydroplane avoidance, and wet brake temperature maintenance.',
   },
   night: {
@@ -530,7 +530,7 @@ export const WEATHER_CONDITIONS: Record<WeatherConditionId, WeatherCondition> = 
     airDensity: 1.240,
     rainIntensity: 0.0,
     tireCompound: 'Pirelli Medium (Yellow)',
-    skyColor: 0x030408,
+    skyColor: 0x0f172a,
     description: 'Desert stadium floodlights. Dense cool air boosts aerodynamic efficiency and power output; glowing brake rotors under 5G deceleration.',
   },
   hot: {
@@ -543,7 +543,7 @@ export const WEATHER_CONDITIONS: Record<WeatherConditionId, WeatherCondition> = 
     airDensity: 1.185,
     rainIntensity: 0.0,
     tireCompound: 'Pirelli Hard (White)',
-    skyColor: 0x140c06,
+    skyColor: 0xfef08a,
     description: 'Extreme thermal degradation test. Baseline car overheats tire surface past 122°C (thermal blister), whereas RL dynamic slip angle control preserves 104°C core.',
   },
   cold: {
@@ -556,7 +556,7 @@ export const WEATHER_CONDITIONS: Record<WeatherConditionId, WeatherCondition> = 
     airDensity: 1.265,
     rainIntensity: 0.15,
     tireCompound: 'Pirelli Intermediate (Green)',
-    skyColor: 0x0a1018,
+    skyColor: 0xd1d5db,
     description: 'Low track temperature causes cold tire graining. Tests RL adaptive tire scrubbing and quick heat generation without locking up.',
   },
 };

@@ -190,7 +190,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#07090e] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-950/20 via-[#07090e] to-[#05060a] text-zinc-100 overflow-hidden font-sans select-none p-1 sm:p-2 gap-1.5">
+    <div className="flex flex-col h-screen w-screen bg-slate-100 bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900 overflow-hidden font-sans select-none p-1 sm:p-2 gap-1.5">
       {/* 1. Bento Comparison & Track / Seasonal Weather Header */}
       <ComparisonHeader
         currentTrackId={trackId}
@@ -210,7 +210,7 @@ export default function App() {
       />
 
       {/* 2. Bento Framed Single-Screen 3D Racing Viewport */}
-      <main className="relative flex-1 w-full max-w-7xl mx-auto h-full min-h-0 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0c0e17] shadow-[0_12px_40px_rgba(0,0,0,0.5)]">
+      <main className="relative flex-1 w-full max-w-7xl mx-auto h-full min-h-0 rounded-2xl overflow-hidden border border-slate-200/90 bg-slate-100 shadow-md">
         {/* Three.js Canvas Container */}
         <F1Scene
           trackId={trackId}

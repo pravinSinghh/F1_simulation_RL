@@ -167,7 +167,7 @@ function createCarTagSprite(isRL: boolean) {
   canvas.height = 140;
   const ctx = canvas.getContext('2d')!;
 
-  ctx.fillStyle = isRL ? 'rgba(0, 229, 255, 0.92)' : 'rgba(255, 59, 48, 0.92)';
+  ctx.fillStyle = isRL ? 'rgba(0, 229, 255, 0.94)' : 'rgba(239, 68, 68, 0.94)';
   ctx.beginPath();
   ctx.roundRect(10, 10, 492, 120, 24);
   ctx.fill();
@@ -177,10 +177,10 @@ function createCarTagSprite(isRL: boolean) {
   ctx.stroke();
 
   ctx.fillStyle = '#05070d';
-  ctx.font = '900 48px monospace, sans-serif';
+  ctx.font = '900 44px monospace, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(isRL ? 'RL-OPTIMIZED #01' : 'STANDARD BASELINE #44', 256, 70);
+  ctx.fillText(isRL ? '#77 RL-OPTIMIZED' : '#01 BASELINE', 256, 70);
 
   const texture = new THREE.CanvasTexture(canvas);
   const material = new THREE.SpriteMaterial({
@@ -214,6 +214,12 @@ export const F1Scene: React.FC<F1SceneProps> = ({
   const mainCameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const cameraLeftRef = useRef<THREE.PerspectiveCamera | null>(null);
   const cameraRightRef = useRef<THREE.PerspectiveCamera | null>(null);
+
+  // Smooth cinematic camera damping state refs
+  const smoothCamPosRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 6, -16));
+  const smoothLookAtRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0.6, 0));
+  const lastCameraModeRef = useRef<string>('');
+  const lastDirectorShotRef = useRef<string>('');
 
   const baseCarGroupRef = useRef<THREE.Group | null>(null);
   const rlCarGroupRef = useRef<THREE.Group | null>(null);
@@ -256,7 +262,7 @@ export const F1Scene: React.FC<F1SceneProps> = ({
     targetFov: 48,
     cameraName: 'CAM 08: DYNAMIC BROADCAST CHASE',
     lensSpecs: '50mm Broadcast Master',
-    directorReason: 'CIRCUIT PACING & GAP TRACKING',
+    directorReason: 'RL PERFORMANCE & GAP TRACKING',
     isStationary: false,
     anchorWorldPos: new THREE.Vector3(),
     anchorTrackDist: 0,
@@ -837,7 +843,7 @@ export const F1Scene: React.FC<F1SceneProps> = ({
     // 4. Infield Grass / Runoff Basin
     const grassGeo = new THREE.PlaneGeometry(1600, 1600, 40, 40);
     grassGeo.rotateX(-Math.PI / 2);
-    const grassColor = isWet ? 0x142018 : isNight ? 0x080f0c : currentWeatherId === 'hot' ? 0x2a2818 : 0x1e3a24;
+    const grassColor = isWet ? 0x23442a : isNight ? 0x080f0c : currentWeatherId === 'hot' ? 0x5e5a32 : 0x2b5e35;
     const grassMat = new THREE.MeshStandardMaterial({
       color: grassColor,
       roughness: 0.95,
@@ -1282,6 +1288,16 @@ export const F1Scene: React.FC<F1SceneProps> = ({
       renderer.setScissorTest(false);
       renderer.setViewport(0, 0, width, height);
 
+      // Track whether mode changed to handle instant cuts cleanly
+      const isModeChanged = lastCameraModeRef.current !== cameraMode;
+      lastCameraModeRef.current = cameraMode;
+
+      // Calculate dynamic comparison metrics for framing both cars
+      const carSeparation = basePos.distanceTo(rlPos);
+      const adaptiveChaseDist = 12.0 + Math.min(18.0, carSeparation * 1.15);
+      const adaptiveChaseHeight = 4.2 + Math.min(4.0, carSeparation * 0.28);
+      const adaptiveSideOffset = Math.sin(timeProgress * Math.PI * 4) * 1.2 + (rlTelemetry.racingLineOffset + baseTelemetry.racingLineOffset) * 0.4;
+
       if (cameraMode === 'director') {
         // =========================================================================
         // AUTO-DIRECTOR INTELLIGENT TV BROADCAST CAMERA ENGINE
@@ -1300,7 +1316,7 @@ export const F1Scene: React.FC<F1SceneProps> = ({
         let outOfStationaryRange = false;
         if (dir.isStationary) {
           const distFromCam = camMain.position.distanceTo(midPoint);
-          if (distFromCam > 120 || distFromCam < 3.5) {
+          if (distFromCam > 140 || distFromCam < 4.0) {
             outOfStationaryRange = true;
           }
         }
@@ -1309,15 +1325,15 @@ export const F1Scene: React.FC<F1SceneProps> = ({
         const isHeavyBraking =
           longG < -1.7 &&
           (dir.shotType === 'SPEED_TRAP_TELEPHOTO' || dir.shotType === 'NOSE_WING_CAM') &&
-          elapsed > 1.2;
+          elapsed > 1.4;
         const isHighSpeedExit =
           speed > 270 &&
           latG < 1.1 &&
           (dir.shotType === 'APEX_KERB_CAM' || dir.shotType === 'HELI_SWEEP_CRANE') &&
-          elapsed > 1.5;
+          elapsed > 1.6;
 
         const shouldSwitch =
-          elapsed >= dir.shotMinDuration || outOfStationaryRange || isHeavyBraking || isHighSpeedExit;
+          isModeChanged || elapsed >= dir.shotMinDuration || outOfStationaryRange || isHeavyBraking || isHighSpeedExit;
 
         if (shouldSwitch) {
           // Intelligently select optimal camera angle based on vehicle telemetry & track segment
@@ -1346,7 +1362,7 @@ export const F1Scene: React.FC<F1SceneProps> = ({
 
           dir.shotType = nextShot;
           dir.shotStartTime = now;
-          dir.shotMinDuration = 2.8 + Math.random() * 1.6; // 2.8s to 4.4s realistic broadcast cadence
+          dir.shotMinDuration = 3.0 + Math.random() * 1.8; // 3.0s to 4.8s broadcast cadence
 
           if (nextShot === 'SPEED_TRAP_TELEPHOTO') {
             const ptAhead = getTrackPointAtDistance((dist + 95) % trackLen, trackId);
@@ -1360,8 +1376,10 @@ export const F1Scene: React.FC<F1SceneProps> = ({
             dir.targetFov = 26; // High optical compression
             dir.cameraName = `CAM 01: ${activeTrackData.name.toUpperCase()} SPEED TRAP`;
             dir.lensSpecs = '400mm F/2.8 IS Telephoto';
-            dir.directorReason = `SPEED TRAP RUN (${Math.round(speed)} KM/H)`;
+            dir.directorReason = `STRAIGHT RUN (${Math.round(speed)} KM/H - DRS OPEN)`;
             camMain.position.copy(dir.anchorWorldPos);
+            smoothCamPosRef.current.copy(dir.anchorWorldPos);
+            smoothLookAtRef.current.copy(midPoint);
           } else if (nextShot === 'APEX_KERB_CAM') {
             const ptApex = getTrackPointAtDistance((dist + 32) % trackLen, trackId);
             const innerOffset = ptApex.normal.clone().multiplyScalar(-4.5);
@@ -1374,8 +1392,10 @@ export const F1Scene: React.FC<F1SceneProps> = ({
             dir.targetFov = 38;
             dir.cameraName = `CAM 03: APEX KERB TRACKSIDE`;
             dir.lensSpecs = '85mm F/1.4 Cine Prime';
-            dir.directorReason = `CORNER APEX LOAD (${latG.toFixed(1)}G LATERAL)`;
+            dir.directorReason = `RL TRAIL-BRAKE & APEX SUCTION (${latG.toFixed(1)}G)`;
             camMain.position.copy(dir.anchorWorldPos);
+            smoothCamPosRef.current.copy(dir.anchorWorldPos);
+            smoothLookAtRef.current.copy(midPoint);
           } else if (nextShot === 'TOWER_HIGH_PAN') {
             const ptTower = getTrackPointAtDistance((dist + 45) % trackLen, trackId);
             dir.anchorWorldPos
@@ -1389,6 +1409,8 @@ export const F1Scene: React.FC<F1SceneProps> = ({
             dir.lensSpecs = '200mm Broadcast Zoom';
             dir.directorReason = `SECTOR OVERVIEW & PACING`;
             camMain.position.copy(dir.anchorWorldPos);
+            smoothCamPosRef.current.copy(dir.anchorWorldPos);
+            smoothLookAtRef.current.copy(midPoint);
           } else if (nextShot === 'HELI_SWEEP_CRANE') {
             dir.isStationary = false;
             dir.targetFov = 44;
@@ -1396,32 +1418,32 @@ export const F1Scene: React.FC<F1SceneProps> = ({
             dir.orbitSpeed = 0.25;
             dir.cameraName = `CAM 05: GYRO HELI-CRANE 4K`;
             dir.lensSpecs = '35mm Aerial CineLens';
-            dir.directorReason = `HIGH-G AERO SWEEPER (${latG.toFixed(1)}G)`;
+            dir.directorReason = `AERO SWEEPER (+${rlTelemetry.downforceKg - baseTelemetry.downforceKg}KG GRIP)`;
           } else if (nextShot === 'ONBOARD_TCAM') {
             dir.isStationary = false;
-            dir.targetFov = 66;
-            dir.cameraName = `CAM 09: ONBOARD T-CAM #01`;
+            dir.targetFov = 64;
+            dir.cameraName = `CAM 09: ONBOARD T-CAM (#77)`;
             dir.lensSpecs = '18mm Ultra-Wide Action';
-            dir.directorReason = `DRIVER COCKPIT & TRAIL-BRAKE`;
+            dir.directorReason = `RL APEX ROTATION & THROTTLE PICKUP`;
           } else if (nextShot === 'NOSE_WING_CAM') {
             dir.isStationary = false;
             dir.targetFov = 52;
             dir.cameraName = `CAM 07: FRONT NOSE-WING POD`;
             dir.lensSpecs = '24mm Macro Action';
-            dir.directorReason = `VENTURI UNDERFLOOR & WING VORTICES`;
+            dir.directorReason = `VENTURI UNDERFLOOR & SUSPENSION`;
           } else if (nextShot === 'REVERSE_BATTLE_CAM') {
             dir.isStationary = false;
             dir.targetFov = 46;
             dir.cameraName = `CAM 06: REVERSE BATTLE PURSUIT`;
             dir.lensSpecs = '35mm Action Prime';
-            dir.directorReason = `WHEEL-TO-WHEEL BATTLE GAP`;
+            dir.directorReason = `WHEEL-TO-WHEEL PURSUIT GAP`;
           } else {
             // CHASE_DYNAMIC
             dir.isStationary = false;
             dir.targetFov = 48;
             dir.cameraName = `CAM 08: DYNAMIC BROADCAST CHASE`;
             dir.lensSpecs = '50mm Broadcast Master';
-            dir.directorReason = `RACE LEAD & VEHICLE DYNAMICS`;
+            dir.directorReason = `DUEL COMPARISON & VEHICLE DYNAMICS`;
           }
 
           setDirectorHUD({
@@ -1434,7 +1456,7 @@ export const F1Scene: React.FC<F1SceneProps> = ({
           });
         }
 
-        // Frame update for active director camera shot
+        // Frame update for active director camera shot with smooth tracking
         if (
           dir.shotType === 'SPEED_TRAP_TELEPHOTO' ||
           dir.shotType === 'APEX_KERB_CAM' ||
@@ -1445,67 +1467,75 @@ export const F1Scene: React.FC<F1SceneProps> = ({
             .clone()
             .add(new THREE.Vector3(0, 0.6, 0))
             .add(tangent.clone().multiplyScalar(1.5));
-          camMain.lookAt(lookTarget);
+          smoothLookAtRef.current.lerp(lookTarget, 0.25);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (dir.shotType === 'HELI_SWEEP_CRANE') {
-          dir.orbitAngle += 0.008;
-          const craneDist = 28.0;
+          dir.orbitAngle += 0.007;
+          const craneDist = Math.max(26.0, 24.0 + carSeparation * 0.7);
           const heliPos = midPoint.clone().add(
             new THREE.Vector3(
               Math.cos(dir.orbitAngle) * craneDist,
-              18.5,
+              18.0 + carSeparation * 0.15,
               Math.sin(dir.orbitAngle) * craneDist
             )
           );
-          camMain.position.lerp(heliPos, 0.12);
-          camMain.lookAt(midPoint.clone().add(new THREE.Vector3(0, 0.6, 0)));
+          smoothCamPosRef.current.lerp(heliPos, 0.14);
+          smoothLookAtRef.current.lerp(midPoint.clone().add(new THREE.Vector3(0, 0.6, 0)), 0.18);
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (dir.shotType === 'ONBOARD_TCAM') {
           const tCamPos = rlPos
             .clone()
             .add(tangent.clone().multiplyScalar(-0.25))
             .add(new THREE.Vector3(0, 1.15, 0))
             .add(normal.clone().multiplyScalar(0.04));
-          camMain.position.copy(tCamPos);
-          camMain.lookAt(
-            rlPos
-              .clone()
-              .add(tangent.clone().multiplyScalar(22.0))
-              .add(new THREE.Vector3(0, 0.5, 0))
-          );
+          const tCamLook = rlPos
+            .clone()
+            .add(tangent.clone().multiplyScalar(22.0))
+            .add(new THREE.Vector3(0, 0.5, 0));
+          smoothCamPosRef.current.lerp(tCamPos, 0.35);
+          smoothLookAtRef.current.lerp(tCamLook, 0.35);
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (dir.shotType === 'NOSE_WING_CAM') {
           const nosePos = rlPos
             .clone()
             .add(tangent.clone().multiplyScalar(1.95))
             .add(normal.clone().multiplyScalar(0.75))
             .add(new THREE.Vector3(0, 0.36, 0));
-          camMain.position.copy(nosePos);
-          camMain.lookAt(
-            rlPos
-              .clone()
-              .add(tangent.clone().multiplyScalar(-1.2))
-              .add(new THREE.Vector3(0, 0.55, 0))
-          );
+          const noseLook = rlPos
+            .clone()
+            .add(tangent.clone().multiplyScalar(-1.2))
+            .add(new THREE.Vector3(0, 0.55, 0));
+          smoothCamPosRef.current.lerp(nosePos, 0.35);
+          smoothLookAtRef.current.lerp(noseLook, 0.35);
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (dir.shotType === 'REVERSE_BATTLE_CAM') {
           const revPos = rlPos
             .clone()
-            .add(tangent.clone().multiplyScalar(13.5))
+            .add(tangent.clone().multiplyScalar(13.5 + Math.min(10.0, carSeparation * 0.5)))
             .add(normal.clone().multiplyScalar(-1.8))
-            .add(new THREE.Vector3(0, 2.4, 0));
-          camMain.position.lerp(revPos, 0.22);
-          camMain.lookAt(midPoint.clone().add(new THREE.Vector3(0, 0.5, 0)));
+            .add(new THREE.Vector3(0, 2.5, 0));
+          smoothCamPosRef.current.lerp(revPos, 0.16);
+          smoothLookAtRef.current.lerp(midPoint.clone().add(new THREE.Vector3(0, 0.5, 0)), 0.20);
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else {
           // CHASE_DYNAMIC
           const targetCamPos = midPoint
             .clone()
-            .add(tangent.clone().multiplyScalar(-13.5))
-            .add(new THREE.Vector3(0, 4.4, 0))
-            .add(normal.clone().multiplyScalar(2.2));
-          camMain.position.lerp(targetCamPos, 0.22);
-          camMain.lookAt(
-            midPoint
-              .clone()
-              .add(new THREE.Vector3(0, 0.7, 0))
-              .add(tangent.clone().multiplyScalar(4.0))
-          );
+            .add(tangent.clone().multiplyScalar(-adaptiveChaseDist))
+            .add(new THREE.Vector3(0, adaptiveChaseHeight, 0))
+            .add(normal.clone().multiplyScalar(adaptiveSideOffset));
+          const targetLookAt = midPoint
+            .clone()
+            .add(new THREE.Vector3(0, 0.7, 0))
+            .add(tangent.clone().multiplyScalar(4.0));
+          smoothCamPosRef.current.lerp(targetCamPos, 0.16);
+          smoothLookAtRef.current.lerp(targetLookAt, 0.20);
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         }
 
         // Smooth optical FOV zoom lerp
@@ -1514,73 +1544,127 @@ export const F1Scene: React.FC<F1SceneProps> = ({
       } else {
         // Reset FOV to standard 48 when outside of Director mode
         if (Math.abs(camMain.fov - 48) > 0.5) {
-          camMain.fov = THREE.MathUtils.lerp(camMain.fov, 48, 0.2);
+          camMain.fov = THREE.MathUtils.lerp(camMain.fov, 48, 0.18);
           camMain.updateProjectionMatrix();
         }
 
         if (cameraMode === 'chase') {
-          // Unified Chase Camera showing both cars
+          // Unified Chase Camera showing both cars with adaptive separation framing
           const targetCamPos = midPoint
             .clone()
-            .add(tangent.clone().multiplyScalar(-13.5))
-            .add(new THREE.Vector3(0, 4.6, 0))
-            .add(normal.clone().multiplyScalar(2.4));
+            .add(tangent.clone().multiplyScalar(-adaptiveChaseDist))
+            .add(new THREE.Vector3(0, adaptiveChaseHeight, 0))
+            .add(normal.clone().multiplyScalar(adaptiveSideOffset));
+          const targetLookAt = midPoint
+            .clone()
+            .add(new THREE.Vector3(0, 0.8, 0))
+            .add(tangent.clone().multiplyScalar(4.5));
 
-          camMain.position.lerp(targetCamPos, 0.22);
-          camMain.lookAt(
-            midPoint
-              .clone()
-              .add(new THREE.Vector3(0, 0.8, 0))
-              .add(tangent.clone().multiplyScalar(4.5))
-          );
+          if (isModeChanged) {
+            smoothCamPosRef.current.copy(targetCamPos);
+            smoothLookAtRef.current.copy(targetLookAt);
+          } else {
+            smoothCamPosRef.current.lerp(targetCamPos, 0.16);
+            smoothLookAtRef.current.lerp(targetLookAt, 0.20);
+          }
+
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (cameraMode === 'trackside') {
           // High-Zoom Telephoto Lens at Track Apexes
           const tracksidePos = ptRL.position
             .clone()
-            .add(normal.clone().multiplyScalar(18.0))
-            .add(new THREE.Vector3(0, 4.5, 0));
+            .add(normal.clone().multiplyScalar(19.0))
+            .add(new THREE.Vector3(0, 4.6, 0));
+          const tracksideLookAt = midPoint.clone().add(new THREE.Vector3(0, 0.6, 0));
 
-          camMain.position.lerp(tracksidePos, 0.08);
-          camMain.lookAt(midPoint.clone().add(new THREE.Vector3(0, 0.5, 0)));
+          if (isModeChanged) {
+            smoothCamPosRef.current.copy(tracksidePos);
+            smoothLookAtRef.current.copy(tracksideLookAt);
+          } else {
+            smoothCamPosRef.current.lerp(tracksidePos, 0.08);
+            smoothLookAtRef.current.lerp(tracksideLookAt, 0.22);
+          }
+
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (cameraMode === 'overhead') {
           // High-Altitude Tactical Bird's-Eye View
           const overheadPos = midPoint
             .clone()
-            .add(new THREE.Vector3(0, 42, 0))
+            .add(new THREE.Vector3(0, 44, 0))
             .add(tangent.clone().multiplyScalar(-8));
-          camMain.position.lerp(overheadPos, 0.2);
-          camMain.lookAt(midPoint);
+          const overheadLookAt = midPoint.clone();
+
+          if (isModeChanged) {
+            smoothCamPosRef.current.copy(overheadPos);
+            smoothLookAtRef.current.copy(overheadLookAt);
+          } else {
+            smoothCamPosRef.current.lerp(overheadPos, 0.16);
+            smoothLookAtRef.current.lerp(overheadLookAt, 0.20);
+          }
+
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (cameraMode === 'cockpit') {
-          // First-person Halo Driver View from RL Car
+          // First-person Halo Driver View from RL-Optimized Car
           const cockpitPos = rlPos
             .clone()
             .add(tangent.clone().multiplyScalar(0.12))
             .add(new THREE.Vector3(0, 0.72, 0));
-          camMain.position.copy(cockpitPos);
-          camMain.lookAt(
-            rlPos
-              .clone()
-              .add(tangent.clone().multiplyScalar(18.0))
-              .add(new THREE.Vector3(0, 0.6, 0))
-          );
+          const cockpitLookAt = rlPos
+            .clone()
+            .add(tangent.clone().multiplyScalar(18.0))
+            .add(new THREE.Vector3(0, 0.6, 0));
+
+          if (isModeChanged) {
+            smoothCamPosRef.current.copy(cockpitPos);
+            smoothLookAtRef.current.copy(cockpitLookAt);
+          } else {
+            smoothCamPosRef.current.lerp(cockpitPos, 0.30);
+            smoothLookAtRef.current.lerp(cockpitLookAt, 0.30);
+          }
+
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (cameraMode === 'gyro') {
           // Dynamic Rolling Drone
           const gyroPos = leadCarPos
             .clone()
-            .add(tangent.clone().multiplyScalar(-9.0))
-            .add(normal.clone().multiplyScalar(-4.5))
-            .add(new THREE.Vector3(0, 3.2, 0));
-          camMain.position.lerp(gyroPos, 0.18);
-          camMain.lookAt(midPoint);
+            .add(tangent.clone().multiplyScalar(-10.0 - carSeparation * 0.4))
+            .add(normal.clone().multiplyScalar(-5.0))
+            .add(new THREE.Vector3(0, 3.6, 0));
+          const gyroLookAt = midPoint.clone().add(new THREE.Vector3(0, 0.5, 0));
+
+          if (isModeChanged) {
+            smoothCamPosRef.current.copy(gyroPos);
+            smoothLookAtRef.current.copy(gyroLookAt);
+          } else {
+            smoothCamPosRef.current.lerp(gyroPos, 0.14);
+            smoothLookAtRef.current.lerp(gyroLookAt, 0.18);
+          }
+
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         } else if (cameraMode === 'ghost') {
-          // Tight Close-Up comparing lateral deviation
+          // Tight Close-Up comparing lateral deviation & apex clipping
           const ghostCamPos = midPoint
             .clone()
-            .add(tangent.clone().multiplyScalar(-7.5))
-            .add(normal.clone().multiplyScalar(3.2))
-            .add(new THREE.Vector3(0, 2.4, 0));
-          camMain.position.lerp(ghostCamPos, 0.25);
-          camMain.lookAt(midPoint.clone().add(new THREE.Vector3(0, 0.4, 0)));
+            .add(tangent.clone().multiplyScalar(-8.0 - Math.min(6.0, carSeparation * 0.5)))
+            .add(normal.clone().multiplyScalar(3.5))
+            .add(new THREE.Vector3(0, 2.6, 0));
+          const ghostLookAt = midPoint.clone().add(new THREE.Vector3(0, 0.5, 0));
+
+          if (isModeChanged) {
+            smoothCamPosRef.current.copy(ghostCamPos);
+            smoothLookAtRef.current.copy(ghostLookAt);
+          } else {
+            smoothCamPosRef.current.lerp(ghostCamPos, 0.18);
+            smoothLookAtRef.current.lerp(ghostLookAt, 0.22);
+          }
+
+          camMain.position.copy(smoothCamPosRef.current);
+          camMain.lookAt(smoothLookAtRef.current);
         }
       }
 
@@ -1610,36 +1694,36 @@ export const F1Scene: React.FC<F1SceneProps> = ({
       />
 
       {/* AR Viewport Overlay Watermark & Telemetry Grid Target */}
-      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 text-[10px] font-mono tracking-widest text-white/40 uppercase">
-        <span className="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-        <span>Grand Prix Neural Sim // {TRACKS_DATA[trackId]?.name.toUpperCase()}</span>
+      <div className="absolute top-3 left-3 pointer-events-none flex items-center gap-2 text-[10px] font-mono tracking-wider text-slate-700 bg-white/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-sm uppercase font-bold">
+        <span className="inline-block w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
+        <span>Grand Prix RL Sim // {TRACKS_DATA[trackId]?.name.toUpperCase()}</span>
       </div>
 
       {/* Weather status watermark */}
-      <div className="absolute top-3 right-3 pointer-events-none flex items-center gap-2 text-[10px] font-mono tracking-widest text-amber-400/80 bg-black/40 px-2 py-1 rounded border border-white/10 uppercase">
+      <div className="absolute top-3 right-3 pointer-events-none flex items-center gap-2 text-[10px] font-mono tracking-wider text-slate-800 bg-white/80 backdrop-blur-md px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-sm uppercase font-bold">
         <span>{WEATHER_CONDITIONS[weatherId]?.badge}</span>
       </div>
 
       {/* Broadcast TV Auto-Director Graphic Overlay */}
       {cameraMode === 'director' && directorHUD && (
         <div className="absolute bottom-4 left-4 pointer-events-none z-10 animate-fade-in flex flex-col gap-1.5 select-none">
-          <div className="bg-[#0b0e18]/90 border border-white/[0.12] backdrop-blur-md rounded-xl p-2.5 px-3 flex items-center gap-3 shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-600/90 text-white font-black text-[10px] tracking-wider uppercase shadow-[0_0_12px_rgba(239,68,68,0.7)]">
+          <div className="bg-white/90 border border-slate-200 backdrop-blur-md rounded-xl p-2 px-3 flex items-center gap-3 shadow-md">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-600 text-white font-black text-[10px] tracking-wider uppercase shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <span>LIVE DIRECTED</span>
             </div>
 
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-black text-white tracking-tight font-mono">
+                <span className="text-xs font-black text-slate-900 tracking-tight font-mono">
                   {directorHUD.name}
                 </span>
-                <span className="text-[10px] text-zinc-400 font-mono">
+                <span className="text-[10px] text-slate-500 font-mono">
                   ({directorHUD.lens})
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-[10px] text-cyan-300 font-mono font-medium">
-                <span>AI Reason: {directorHUD.reason}</span>
+              <div className="flex items-center gap-2 text-[10px] text-sky-700 font-mono font-bold">
+                <span>Director Trigger: {directorHUD.reason}</span>
               </div>
             </div>
           </div>

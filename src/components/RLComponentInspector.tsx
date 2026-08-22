@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RL_OPTIMIZATIONS } from '../physics/carSimulation';
 import { LapSummary } from '../types';
-import { Cpu, Wind, Wrench, Shield, CheckCircle2, TrendingUp, Sliders, Zap } from 'lucide-react';
+import { Cpu, Wind, Wrench, Sparkles, Zap, TrendingUp, Sliders, CheckCircle2 } from 'lucide-react';
 
 interface RLComponentInspectorProps {
   lapSummary: LapSummary;
@@ -35,13 +35,13 @@ export const RLComponentInspector: React.FC<RLComponentInspectorProps> = ({
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'aerodynamics':
-        return <Wind className="w-4 h-4 text-cyan-400" />;
+        return <Wind className="w-4 h-4 text-sky-600" />;
       case 'mechanical':
-        return <Wrench className="w-4 h-4 text-amber-400" />;
+        return <Wrench className="w-4 h-4 text-amber-600" />;
       case 'control_policy':
-        return <Cpu className="w-4 h-4 text-purple-400" />;
+        return <Cpu className="w-4 h-4 text-indigo-600" />;
       default:
-        return <Sliders className="w-4 h-4 text-zinc-400" />;
+        return <Sliders className="w-4 h-4 text-slate-700" />;
     }
   };
 
@@ -50,82 +50,83 @@ export const RLComponentInspector: React.FC<RLComponentInspectorProps> = ({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-xl"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
     >
-      <div className="bg-[#0f111a]/95 border border-white/10 w-full max-w-4xl rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white border border-slate-200 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        
         {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-white/[0.08] flex items-center justify-between bg-white/[0.02]">
+        <div className="p-4 sm:p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400/20 to-blue-600/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-sky-700 shadow-sm">
               <Cpu className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-2">
-                RL Optimization Architecture Matrix
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
+                RL Engineering & Aero Upgrades
               </h2>
-              <p className="text-xs text-zinc-400">
-                PPO Deep Policy Component Matrix vs OEM Baseline Benchmark
+              <p className="text-xs text-slate-700 font-medium">
+                Component-by-component comparison: RL-Optimized Car (#77) vs Baseline Car (#01)
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center justify-center font-bold text-xs"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex items-center justify-center font-bold text-xs border border-slate-200"
           >
             ✕
           </button>
         </div>
 
-        {/* Lap Gains Summary Bento Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-4 sm:px-6 bg-black/40 border-b border-white/[0.06]">
-          <div className="bg-[#141724]/90 border border-white/[0.08] rounded-2xl p-3 shadow-md">
-            <span className="text-[9px] text-zinc-400 uppercase font-semibold tracking-wider">Lap Time Delta</span>
-            <div className="text-xl font-black font-mono text-emerald-400 mt-0.5 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
+        {/* Lap Gains Summary Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-4 sm:px-6 bg-slate-50/60 border-b border-slate-200">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm">
+            <span className="text-[10px] text-slate-700 uppercase font-bold tracking-wider">Lap Time Advantage</span>
+            <div className="text-xl font-black font-mono text-emerald-600 mt-0.5">
               {lapSummary.deltaLapTime}s
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">{lapSummary.lapTimeRL.toFixed(2)}s vs {lapSummary.lapTimeBaseline.toFixed(2)}s</span>
+            <span className="text-[11px] text-slate-700 font-mono">{lapSummary.lapTimeRL.toFixed(2)}s vs {lapSummary.lapTimeBaseline.toFixed(2)}s</span>
           </div>
 
-          <div className="bg-[#141724]/90 border border-white/[0.08] rounded-2xl p-3 shadow-md">
-            <span className="text-[9px] text-zinc-400 uppercase font-semibold tracking-wider">Peak Cornering G</span>
-            <div className="text-xl font-black font-mono text-cyan-400 mt-0.5 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm">
+            <span className="text-[10px] text-slate-700 uppercase font-bold tracking-wider">Cornering G-Force</span>
+            <div className="text-xl font-black font-mono text-sky-800 mt-0.5">
               {lapSummary.maxLateralGRL} G
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">+{((lapSummary.maxLateralGRL - lapSummary.maxLateralGBaseline)).toFixed(2)}G over Base</span>
+            <span className="text-[11px] text-slate-700 font-mono">+{((lapSummary.maxLateralGRL - lapSummary.maxLateralGBaseline)).toFixed(2)}G over Base</span>
           </div>
 
-          <div className="bg-[#141724]/90 border border-white/[0.08] rounded-2xl p-3 shadow-md">
-            <span className="text-[9px] text-zinc-400 uppercase font-semibold tracking-wider">Avg Corner Speed</span>
-            <div className="text-xl font-black font-mono text-cyan-400 mt-0.5 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm">
+            <span className="text-[10px] text-slate-700 uppercase font-bold tracking-wider">Avg Apex Speed</span>
+            <div className="text-xl font-black font-mono text-sky-800 mt-0.5">
               {lapSummary.avgCornerSpeedRL} km/h
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">+{lapSummary.avgCornerSpeedRL - lapSummary.avgCornerSpeedBaseline} km/h edge</span>
+            <span className="text-[11px] text-slate-700 font-mono">+{lapSummary.avgCornerSpeedRL - lapSummary.avgCornerSpeedBaseline} km/h faster</span>
           </div>
 
-          <div className="bg-[#141724]/90 border border-white/[0.08] rounded-2xl p-3 shadow-md">
-            <span className="text-[9px] text-zinc-400 uppercase font-semibold tracking-wider">Tire Wear Rate</span>
-            <div className="text-xl font-black font-mono text-emerald-400 mt-0.5 drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
+          <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm">
+            <span className="text-[10px] text-slate-700 uppercase font-bold tracking-wider">Tire Preservation</span>
+            <div className="text-xl font-black font-mono text-emerald-600 mt-0.5">
               -28% Wear
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">{lapSummary.tireWearRL}%/lap vs {lapSummary.tireWearBaseline}%</span>
+            <span className="text-[11px] text-slate-700 font-mono">{lapSummary.tireWearRL}%/lap vs {lapSummary.tireWearBaseline}%</span>
           </div>
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="flex items-center gap-2 p-3 sm:px-6 border-b border-white/[0.06] bg-[#0c0e17]">
+        <div className="flex items-center gap-1.5 p-3 sm:px-6 border-b border-slate-200 bg-white">
           {[
-            { id: 'all', label: 'All Components' },
+            { id: 'all', label: 'All Upgrades' },
             { id: 'aerodynamics', label: 'Aerodynamics' },
             { id: 'mechanical', label: 'Mechanical Setup' },
-            { id: 'control_policy', label: 'RL Policy & Braking' },
+            { id: 'control_policy', label: 'RL Driving & Braking Policy' },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSelectedCategory(tab.id as 'all' | 'aerodynamics' | 'mechanical' | 'control_policy')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 selectedCategory === tab.id
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-sky-600 text-white shadow-sm'
+                  : 'text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               {tab.label}
@@ -134,55 +135,55 @@ export const RLComponentInspector: React.FC<RLComponentInspectorProps> = ({
         </div>
 
         {/* Component Cards Grid */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-3 flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-3 flex-1 bg-white">
           {filteredSpecs.map((spec) => (
             <div
               key={spec.name}
-              className="bg-[#141724]/80 border border-white/[0.08] rounded-2xl p-4 flex flex-col gap-3 hover:border-cyan-500/30 transition-colors shadow-md"
+              className="bg-slate-50/70 border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 hover:border-sky-300 transition-colors shadow-sm"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-white/5 border border-white/5">
+                  <div className="p-2 rounded-xl bg-white border border-slate-200 shadow-xs">
                     {getCategoryIcon(spec.category)}
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">{spec.name}</h3>
-                    <span className="text-[9px] uppercase font-mono text-zinc-400 tracking-wider">
+                    <h3 className="text-sm font-bold text-slate-900">{spec.name}</h3>
+                    <span className="text-[10px] uppercase font-bold text-slate-700 tracking-wider">
                       {spec.category.replace('_', ' ')}
                     </span>
                   </div>
                 </div>
 
-                <div className="px-2.5 py-1 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+                <div className="px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono font-bold">
                   {spec.delta}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono bg-black/40 p-3 rounded-xl border border-white/[0.04]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono bg-white p-3 rounded-xl border border-slate-200">
                 <div>
-                  <span className="text-zinc-500 block text-[9px] uppercase">Baseline Standard Setup</span>
-                  <span className="text-zinc-300 font-semibold">{spec.baselineVal}</span>
+                  <span className="text-slate-700 block text-[9px] uppercase font-bold">Standard Baseline Setup</span>
+                  <span className="text-slate-800 font-semibold">{spec.baselineVal}</span>
                 </div>
                 <div>
-                  <span className="text-cyan-400 block text-[9px] uppercase font-bold">RL-Optimized Output</span>
-                  <span className="text-cyan-300 font-bold">{spec.optimizedVal}</span>
+                  <span className="text-sky-800 block text-[9px] uppercase font-bold">RL-Optimized Output</span>
+                  <span className="text-sky-800 font-bold">{spec.optimizedVal}</span>
                 </div>
               </div>
 
-              <p className="text-xs text-zinc-400 leading-relaxed">
+              <p className="text-xs text-slate-700 leading-relaxed font-sans font-medium">
                 {spec.gainDescription}
               </p>
             </div>
           ))}
 
-          {/* Neural Architecture Card */}
-          <div className="bg-gradient-to-r from-purple-950/40 via-[#141724]/90 to-cyan-950/40 border border-purple-500/30 rounded-2xl p-4 flex flex-col gap-2 shadow-lg">
-            <div className="flex items-center gap-2 text-purple-300 font-bold text-xs sm:text-sm">
-              <Zap className="w-4 h-4 text-purple-400 fill-purple-400" />
-              <span>RL Agent Optimization Details (PPO Actor-Critic)</span>
+          {/* RL Intelligence Card */}
+          <div className="bg-gradient-to-r from-sky-50 to-indigo-50 border border-sky-200 rounded-2xl p-4 flex flex-col gap-2 shadow-sm">
+            <div className="flex items-center gap-2 text-sky-900 font-bold text-xs sm:text-sm">
+              <Zap className="w-4 h-4 text-sky-600 fill-sky-600" />
+              <span>How Reinforcement Learning Optimized the Race Car</span>
             </div>
-            <p className="text-xs text-zinc-300 leading-relaxed">
-              Trained over 4.2 million simulated track kilometers in high-fidelity CFD aerodynamic mesh models. The agent maximizes lap time reward while penalizing tire degradation and aerodynamic floor stall during lateral weight transfer.
+            <p className="text-xs text-slate-700 leading-relaxed font-medium">
+              Trained over 4.2 million simulated track kilometers in high-fidelity aerodynamic simulation models using PPO policy gradients. The neural network learns the optimal compromise between downforce suction, tire temperature preservation, and straightaway top speed.
             </p>
           </div>
         </div>

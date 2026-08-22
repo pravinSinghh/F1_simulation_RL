@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TelemetryPoint, TrackDefinition, WeatherCondition } from '../types';
-import { Activity } from 'lucide-react';
+import { Activity, Sparkles, Zap, TrendingUp, Info } from 'lucide-react';
 
 interface TelemetryGraphModalProps {
   isOpen: boolean;
@@ -41,7 +41,7 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
   const rlPoints = rlTelemetry;
   const numPts = basePoints.length;
 
-  // Downsample to 250 points for super smooth SVG rendering
+  // Downsample to 250 points for smooth SVG rendering
   const step = Math.max(1, Math.floor(numPts / 250));
   const sampleData: {
     distPct: number;
@@ -75,7 +75,7 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
 
   // Graph dimensions
   const svgWidth = 800;
-  const svgHeight = 260;
+  const svgHeight = 250;
   const padLeft = 45;
   const padRight = 20;
   const padTop = 20;
@@ -102,57 +102,91 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
     >
-      <div className="bg-[#0e111a] border border-white/10 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-[0_24px_64px_rgba(0,0,0,0.8)]">
+      <div className="bg-white border border-slate-200 rounded-3xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl">
+        
         {/* Header */}
-        <div className="p-4 px-6 border-b border-white/10 flex items-center justify-between bg-black/40">
+        <div className="p-4 px-6 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+            <div className="p-2.5 rounded-2xl bg-sky-100 border border-sky-200 text-sky-700">
               <Activity className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-tight">
-                  High-Resolution Telemetry Traces
+                <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                  Lap Speed & Telemetry Comparison
                 </h2>
-                <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                <span className="text-xs font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
                   {activeTrack.name}
                 </span>
-                <span className="text-xs font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                <span className="text-xs font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                   {activeWeather.badge}
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">
-                Full-lap overlay comparison across throttle, braking, lateral cornering load, and apex speeds
+              <p className="text-xs text-slate-700 font-medium">
+                Visual analysis comparing RL-optimized car (#77) vs Baseline benchmark car (#01)
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center text-sm font-bold transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-sm font-bold transition-colors border border-slate-200"
           >
             ✕
           </button>
         </div>
 
-        {/* Tab Controls */}
-        <div className="px-6 pt-4 flex items-center justify-between gap-2 border-b border-white/5 pb-3">
-          <div className="flex items-center gap-2">
+        {/* Simple User Key Insights Banner */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3.5 px-6 bg-sky-50/70 border-b border-sky-100">
+          <div className="flex items-start gap-2">
+            <div className="p-1 rounded-lg bg-sky-200/70 text-sky-800 mt-0.5">
+              <TrendingUp className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-900 block">Higher Corner Speed</span>
+              <span className="text-[11px] text-slate-700">RL carries +12 km/h higher minimum apex speed with ground-effect suction.</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <div className="p-1 rounded-lg bg-rose-200/70 text-rose-800 mt-0.5">
+              <Zap className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-900 block">Later Braking Points</span>
+              <span className="text-[11px] text-slate-700">RL brakes 15m deeper into hairpins using dynamic brake-bias migration.</span>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <div className="p-1 rounded-lg bg-emerald-200/70 text-emerald-800 mt-0.5">
+              <Sparkles className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-900 block">Instant Exit Traction</span>
+              <span className="text-[11px] text-slate-700">Differential lock prevents wheelspin, giving 0.25s faster corner exit.</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Controls & Legend */}
+        <div className="px-6 pt-3 flex items-center justify-between gap-2 border-b border-slate-200 pb-2.5 bg-slate-50/40">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {[
               { id: 'speed', label: 'Speed Profile (km/h)' },
-              { id: 'gforce', label: 'Lateral G-Force (G)' },
-              { id: 'delta', label: 'Time Delta Δ (s)' },
+              { id: 'gforce', label: 'Cornering Grip (Lateral G)' },
+              { id: 'delta', label: 'Time Gap Δ (s)' },
               { id: 'throttle-brake', label: 'Throttle & Braking Inputs' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setMetricTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   metricTab === tab.id
-                    ? 'bg-cyan-500 text-zinc-950 font-bold shadow-[0_0_12px_rgba(6,182,212,0.4)]'
-                    : 'bg-zinc-900 text-zinc-400 hover:text-white border border-white/5'
+                    ? 'bg-sky-600 text-white shadow-sm'
+                    : 'bg-white text-slate-700 hover:text-slate-900 border border-slate-200 hover:bg-slate-100'
                 }`}
               >
                 {tab.label}
@@ -161,21 +195,21 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
           </div>
 
           {/* Legend */}
-          <div className="flex items-center gap-4 text-xs font-mono">
+          <div className="flex items-center gap-4 text-xs font-mono font-bold">
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-1 bg-red-500 rounded-full" />
-              <span className="text-zinc-400">Baseline</span>
+              <span className="w-3 h-1.5 bg-red-500 rounded-full" />
+              <span className="text-slate-700 font-sans">#01 Baseline</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-1 bg-cyan-400 rounded-full shadow-[0_0_6px_#22d3ee]" />
-              <span className="text-cyan-300 font-bold">RL-Optimized</span>
+              <span className="w-3 h-1.5 bg-sky-600 rounded-full" />
+              <span className="text-sky-800 font-sans font-bold">#77 RL Optimized</span>
             </div>
           </div>
         </div>
 
         {/* Interactive SVG Chart Viewport */}
-        <div className="p-6 flex-1 flex flex-col justify-center">
-          <div className="relative w-full bg-[#080a10] border border-white/10 rounded-2xl p-2 overflow-hidden shadow-inner cursor-crosshair">
+        <div className="p-6 flex-1 flex flex-col justify-center bg-white">
+          <div className="relative w-full bg-slate-50 border border-slate-200 rounded-2xl p-2 overflow-hidden shadow-inner cursor-crosshair">
             <svg
               viewBox={`0 0 ${svgWidth} ${svgHeight}`}
               className="w-full h-auto block"
@@ -196,7 +230,7 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
                     y1={y}
                     x2={padLeft + plotWidth}
                     y2={y}
-                    stroke="#27272a"
+                    stroke="#e2e8f0"
                     strokeDasharray="4 4"
                     strokeWidth="1"
                   />
@@ -204,8 +238,8 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
               })}
 
               {/* Sector Dividers */}
-              {activeTrack.sectors.map((sec) => {
-                const startPct = sec.startDist / activeTrack.lengthMeters;
+              {(activeTrack?.sectors || []).map((sec) => {
+                const startPct = sec.startDist / (activeTrack?.lengthMeters || 1);
                 const x = padLeft + startPct * plotWidth;
                 return (
                   <g key={sec.id}>
@@ -214,18 +248,18 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
                       y1={padTop}
                       x2={x}
                       y2={padTop + plotHeight}
-                      stroke="#3f3f46"
+                      stroke="#cbd5e1"
                       strokeWidth="1.5"
                     />
                     <text
                       x={x + 6}
                       y={padTop + 14}
-                      fill="#71717a"
-                      fontSize="9"
-                      fontFamily="monospace"
+                      fill="#64748b"
+                      fontSize="10"
+                      fontFamily="sans-serif"
                       fontWeight="bold"
                     >
-                      S{sec.id}
+                      Sector {sec.id}
                     </text>
                   </g>
                 );
@@ -244,7 +278,7 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
                   <path
                     d={createSvgPath((d) => d.rlSpeed, 60, 360)}
                     fill="none"
-                    stroke="#00e5ff"
+                    stroke="#0284c7"
                     strokeWidth="2.5"
                   />
                 </>
@@ -262,7 +296,7 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
                   <path
                     d={createSvgPath((d) => d.rlG, 0, 5.5)}
                     fill="none"
-                    stroke="#00e5ff"
+                    stroke="#0284c7"
                     strokeWidth="2.5"
                   />
                 </>
@@ -284,14 +318,14 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
                     d={createSvgPath((d) => d.rlThr, 0, 1)}
                     fill="none"
                     stroke="#10b981"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                   />
                   {/* RL Brake */}
                   <path
                     d={createSvgPath((d) => d.rlBrk, 0, 1)}
                     fill="none"
                     stroke="#f43f5e"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                   />
                 </>
               )}
@@ -302,24 +336,24 @@ export const TelemetryGraphModal: React.FC<TelemetryGraphModalProps> = ({
                 y1={padTop}
                 x2={currentScrubberX}
                 y2={padTop + plotHeight}
-                stroke="#ffffff"
+                stroke="#0f172a"
                 strokeWidth="2"
               />
               <circle
                 cx={currentScrubberX}
                 cy={padTop + plotHeight}
-                r="4"
-                fill="#00e5ff"
+                r="4.5"
+                fill="#0284c7"
                 stroke="#ffffff"
-                strokeWidth="1.5"
+                strokeWidth="2"
               />
             </svg>
           </div>
 
-          <div className="mt-3 flex items-center justify-between text-xs text-zinc-400 font-mono">
-            <span>START / FINISH</span>
+          <div className="mt-3 flex items-center justify-between text-xs text-slate-700 font-mono font-bold">
+            <span>🏁 START / FINISH</span>
             <span>DISTANCE ALONG CIRCUIT (0 → {(activeTrack.lengthMeters / 1000).toFixed(2)} KM)</span>
-            <span>LAP COMPLETION</span>
+            <span>LAP COMPLETION 🏁</span>
           </div>
         </div>
       </div>
